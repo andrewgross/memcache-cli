@@ -2,6 +2,16 @@ import cmd
 import sys
 from memcache import Client
 
+def print_error(message):
+  RED='\033[91m'
+  END='\033[0m'
+  print '%s[ERROR]%s %s' % (RED, END, message)
+
+def print_warning(message):
+  YELLOW='\033[33m'
+  END='\033[0m'
+  print '%s[WARNING]%s %s' % (YELLOW, END, message)
+
 class MemcacheCli(cmd.Cmd, object):
 
   def __init__(self, host_list):
@@ -25,7 +35,7 @@ class MemcacheCli(cmd.Cmd, object):
         try:
           print getattr(self.memcache, name)(*parts)
         except Exception, e:
-          print '\033[91m[Error]\033[0m   ', e
+          print_error(e)
     return handler
 
   @staticmethod
@@ -44,7 +54,7 @@ class MemcacheCli(cmd.Cmd, object):
     unreachable_hosts = [ host for host in host_list if host not in reachable_hosts ]
     if unreachable_hosts:
       for host in unreachable_hosts:
-        print "\033[91m[Error]\033[0m Unable to connect to memcache server: %s" % host
+        print_error("Unable to connect to memcache server: %s" % host)
       sys.exit(1)
 
 
@@ -68,8 +78,9 @@ if __name__ == '__main__':
   if len(sys.argv) > 1:
     host_list = sys.argv[1:]
   else:
-    print '[Error] No hosts specified'
-    sys.exit(1)
+    host_list = ['localhost:11211']
+    print_warning('No hosts specified, using %s' % host_list[0])
+  print "Connecting to %s" % (', '.join(host_list))
   while True:
     try:
       MemcacheCli(host_list).cmdloop()
@@ -77,4 +88,6 @@ if __name__ == '__main__':
       print "^C"
       continue
     break    
+
+
   
