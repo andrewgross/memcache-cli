@@ -4,3 +4,12 @@ A big thanks to Tyler (@tghw) from FogCreek for posting the Redis Tutorial that 
 
 http://tghw.com/blog/cheeky-python-a-redis-cli/
 
+Usage:
+
+python memcache-cli.py host1:port host2:port
+
+
+Suggestion:
+
+It may be simpler to wrap this with a simple shell script that has your preferred connection parameters.
+
