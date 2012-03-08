@@ -37,6 +37,13 @@ class MemcacheCli(cmd.Cmd, object):
   def _make_cmd(name):
     # Whats a little functional passing between friends?
     # This is our core factory for creating dynamic methods
+    def _get_stats(self, line):
+      try:
+        pp = pprint.PrettyPrinter(depth=4)
+        pp.pprint(self.memcache.get_stats(line))
+      except Exception, e:
+        print_error(e)
+ 
     def handler(self, line):
         parts = line.split()
         try:
@@ -44,6 +51,9 @@ class MemcacheCli(cmd.Cmd, object):
           pprint.pprint(getattr(self.memcache, name)(*parts))
         except Exception, e:
           print_error(e)
+    # Because get_stats doesn't take *args, but a string 
+    if 'get_stats' in name:
+      return _get_stats
     return handler
 
   @staticmethod
@@ -77,6 +87,27 @@ class MemcacheCli(cmd.Cmd, object):
       if command in name:
         return True
     return False
+
+  # Custom Command not in the library
+  def do_get_hit_rate(self, line):
+    try:
+      stats = self.memcache.get_stats()
+      total_hits = 0
+      total_misses = 0
+      total_calls = 0
+      hit_rate = 0
+      hit_percentage = 0
+      for machine in stats:
+        for k,v in machine[1].items():
+          if 'misses' in k and 'get' in k:
+            total_misses = total_misses + int(v)
+          if 'hits' in k and 'get' in k:
+            total_hits = total_hits + int(v)
+      total_calls = total_hits + total_misses
+      hit_rate = float(total_hits)/total_calls
+      print hit_rate
+    except Exception, e:
+      print_error(e)
 
   # Make it so we can exit easily
   def do_exit(self, line):
