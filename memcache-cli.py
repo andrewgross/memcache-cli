@@ -6,8 +6,8 @@ class MemcacheCli(cmd.Cmd, object):
 
   def __init__(self, host_list):
     super(MemcacheCli, self).__init__()
-
     self.memcache = Client(host_list)
+    self._check_connection(host_list)
     self.prompt = '(memcache) '
     for name in dir(self.memcache):
       if not name.startswith('_') and not self._is_hidden(name):
@@ -17,12 +17,6 @@ class MemcacheCli(cmd.Cmd, object):
           doc = (getattr(attr, '__doc__') or '').strip()
           if doc:  # Not everything has a docstring
             setattr(self.__class__, 'help_' + name, self._make_help(doc))
-
-    # Test for a connection, trying to avoid overwriting existing keys
-    if self.memcache.get('a') is None:
-      if self.memcache.set('a', 'a') is 0:
-        print "\033[91m[Error]\033[0m Unable to connect to memcache"
-        sys.exit(1)
 
   @staticmethod
   def _make_cmd(name):
@@ -39,6 +33,20 @@ class MemcacheCli(cmd.Cmd, object):
     def help(self):
         print doc
     return help
+
+  def _check_connection(self, host_list):
+    # Get Stats for all hosts, make sure we connect to all of them
+    unreachable_hosts = []
+    reachable_hosts = []
+    stats = self.memcache.get_stats()
+    for stat in stats:
+      reachable_hosts.append(stat[0].split()[0])
+    unreachable_hosts = [ host for host in host_list if host not in reachable_hosts ]
+    if unreachable_hosts:
+      for host in unreachable_hosts:
+        print "\033[91m[Error]\033[0m Unable to connect to memcache server: %s" % host
+      sys.exit(1)
+
 
   @staticmethod
   def _is_hidden(name):
