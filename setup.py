@@ -30,7 +30,7 @@ setup(name='memcache-cli',
     url='http://github.com/andrewgross/memcache-cli',
     packages=['memcachecli'],
     install_requires=[
-        "nose",
+        "python-memcached",
     ],
     entry_points={
         'console_scripts': ['memcache-cli = memcachecli.main:main'],
