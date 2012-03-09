@@ -1,3 +1,14 @@
+# #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# ----------------------------------------------------------------------------
+# "THE BEER-WARE LICENSE" (Revision 42):
+# <andrew.w.gross@gmail.com> wrote this file. As long as you retain
+# this notice you can do whatever you want with this stuff. If we meet
+# some day, and you think this stuff is worth it, you can buy me a
+# beer in return Poul-Henning Kamp
+# ----------------------------------------------------------------------------
+
 import cmd
 import sys
 from memcache import Client
@@ -43,7 +54,7 @@ class MemcacheCli(cmd.Cmd, object):
         pp.pprint(self.memcache.get_stats(line))
       except Exception, e:
         print_error(e)
- 
+
     def handler(self, line):
         parts = line.split()
         try:
@@ -51,7 +62,7 @@ class MemcacheCli(cmd.Cmd, object):
           pprint.pprint(getattr(self.memcache, name)(*parts))
         except Exception, e:
           print_error(e)
-    # Because get_stats doesn't take *args, but a string 
+    # Because get_stats doesn't take *args, but a string
     if 'get_stats' in name:
       return _get_stats
     return handler
@@ -117,25 +128,28 @@ class MemcacheCli(cmd.Cmd, object):
   # We don't want to repeat the last command if a blank line is entered, so we pass
   def emptyline(self):
     pass
-  
+
+
+def main():
+    # parse our inputs, which should be memcache server host:port strings
+    if len(sys.argv) > 1:
+        host_list = sys.argv[1:]
+    else:
+        host_list = ['localhost:11211']
+        print_warning('No hosts specified, defaulting to %s' % host_list[0])
+    # Some banner fun to make our CLI all warm and fuzzy
+    print "Connecting to %s" % (', '.join(host_list))
+    # Outer loop so we can recover from interrupts, which cmd does not
+    # handle well
+    while True:
+        try:
+            # Inner loop which actually runs the CMD
+            MemcacheCli(host_list).cmdloop()
+        except KeyboardInterrupt:
+            print "^C"
+            continue
+        break
+
+
 if __name__ == '__main__':
-  # parse our inputs, which should be memcache server host:port strings
-  if len(sys.argv) > 1:
-    host_list = sys.argv[1:]
-  else:
-    host_list = ['localhost:11211']
-    print_warning('No hosts specified, defaulting to %s' % host_list[0])
-  # Some banner fun to make our CLI all warm and fuzzy
-  print "Connecting to %s" % (', '.join(host_list))
-  # Outer loop so we can recover from interrupts, which cmd does not handle well
-  while True:
-    try:
-      # Inner loop which actually runs the CMD
-      MemcacheCli(host_list).cmdloop()
-    except KeyboardInterrupt:
-      print "^C"
-      continue
-    break    
-
-
-  
+    main()
