@@ -50,11 +50,11 @@ class MemcacheCli(cmd.Cmd, object):
     # This is our core factory for creating dynamic methods
     def _get_stats(self, line):
       try:
+        # Rabbit Holes can get pretty deep, better to keep a lid on it
         pp = pprint.PrettyPrinter(depth=4)
         pp.pprint(self.memcache.get_stats(line))
       except Exception, e:
         print_error(e)
-
     def handler(self, line):
         parts = line.split()
         try:
@@ -65,7 +65,8 @@ class MemcacheCli(cmd.Cmd, object):
     # Because get_stats doesn't take *args, but a string
     if 'get_stats' in name:
       return _get_stats
-    return handler
+    else:
+      return handler
 
   @staticmethod
   # This just lets cmd know how to print help commands for arbitrary methods
@@ -123,9 +124,10 @@ class MemcacheCli(cmd.Cmd, object):
   # Make it so we can exit easily
   def do_exit(self, line):
     return True
+  # Alias EOF to exit
   do_EOF = do_exit
 
-  # We don't want to repeat the last command if a blank line is entered, so we pass
+  # We don't want to repeat the last command if a blank line is entered (default behavior), so we pass
   def emptyline(self):
     pass
 
@@ -146,6 +148,7 @@ def main():
             # Inner loop which actually runs the CMD
             MemcacheCli(host_list).cmdloop()
         except KeyboardInterrupt:
+            # Should be wary if this is opening extra connections on CTRL-C
             print "^C"
             continue
         break
